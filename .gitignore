@@ -14,3 +14,6 @@ wheels/
 
 #Db
 *.Db
+
+#Logs
+logs/
