@@ -1,5 +1,6 @@
 # fetch_news.py
 import sqlite3
+import time
 from datetime import datetime, timezone
 
 import yfinance as yf
@@ -34,6 +35,17 @@ def parse_item(item, ticker):
     }
 
 
+def fetch_news_with_retry(ticker, retries=3, wait=30):
+    """抓新聞，失敗時等一下再重試，最多 retries 次"""
+    for attempt in range(1, retries + 1):
+        try:
+            return yf.Ticker(ticker).news
+        except Exception as e:
+            print(f"{ticker}: attempt {attempt}/{retries} failed - {e}")
+            if attempt < retries:
+                time.sleep(wait)
+    return None
+
 def main():
     conn = sqlite3.connect(DB_PATH)
     conn.execute("""
@@ -52,11 +64,11 @@ def main():
     fetched_at = datetime.now(timezone.utc).isoformat()
 
     for t in TICKERS:
-        try:
-            items = yf.Ticker(t).news
-        except Exception as e:
-            print(f"{t}: failed to fetch news - {e}")
+        items = fetch_news_with_retry(t)
+        if items is None:
+            print(f"{t}: giving up after retries")
             continue
+
 
         new_count = 0
         for item in items:
