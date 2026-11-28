@@ -5,8 +5,7 @@ from datetime import datetime, timezone
 
 import yfinance as yf
 
-TICKERS = ["NVDA", "AAPL", "MSFT"]
-DB_PATH = "signal.db"
+from config import DB_PATH, TICKERS
 
 
 def to_utc_iso(value):
